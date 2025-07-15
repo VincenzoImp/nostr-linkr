@@ -18,7 +18,7 @@ export const NostrLinkrButton = ({ address }: { address: string }) => {
     const [loading, setLoading] = useState(false);
 
     const { writeContractAsync: linkNostr } = useScaffoldWriteContract({
-        contractName: "nostrLinkr",
+        contractName: "NostrLinkr",
     });
 
     const handleClick = async () => {
