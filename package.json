@@ -1,0 +1,27 @@
+{
+  "name": "nostr-linkr-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "On-chain Ethereum↔Nostr identity bridge with BIP-340 Schnorr verification",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspace nostr-linkr build",
+    "test": "yarn workspaces foreach -A run test",
+    "test:contracts": "yarn workspace @nostr-linkr/contracts test",
+    "test:sdk": "yarn workspace nostr-linkr test",
+    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "clean": "yarn workspaces foreach -A run clean"
+  },
+  "packageManager": "yarn@3.2.3",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "Vincenzo Imp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VincenzoImp/nostr-linkr"
+  }
+}

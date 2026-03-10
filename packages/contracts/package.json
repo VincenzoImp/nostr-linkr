@@ -1,0 +1,42 @@
+{
+  "name": "@nostr-linkr/contracts",
+  "version": "0.1.0",
+  "description": "NostrLinkr smart contract — on-chain Ethereum↔Nostr identity bridge with BIP-340 Schnorr verification",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "REPORT_GAS=true hardhat test --network hardhat",
+    "deploy:local": "hardhat deploy --network localhost",
+    "deploy:sepolia": "hardhat deploy --network sepolia",
+    "deploy:base-sepolia": "hardhat deploy --network baseSepolia",
+    "deploy:base": "hardhat deploy --network base",
+    "deploy:mainnet": "hardhat deploy --network mainnet",
+    "node": "hardhat node --network hardhat --no-deploy",
+    "clean": "hardhat clean",
+    "typecheck": "tsc --noEmit --incremental",
+    "verify": "hardhat verify"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "~5.0.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "~2.0.7",
+    "@nomicfoundation/hardhat-ethers": "~3.0.8",
+    "@nomicfoundation/hardhat-verify": "~2.0.10",
+    "@typechain/ethers-v6": "~0.5.1",
+    "@typechain/hardhat": "~9.1.0",
+    "@types/chai": "~4.3.0",
+    "@types/mocha": "~10.0.10",
+    "chai": "~4.5.0",
+    "dotenv": "~16.4.5",
+    "ethers": "~6.13.2",
+    "hardhat": "~2.28.2",
+    "hardhat-deploy": "^1.0.4",
+    "hardhat-deploy-ethers": "~0.4.2",
+    "hardhat-gas-reporter": "~2.2.1",
+    "solidity-coverage": "~0.8.13",
+    "ts-node": "~10.9.1",
+    "typechain": "~8.3.2",
+    "typescript": "^5.8.2"
+  }
+}
