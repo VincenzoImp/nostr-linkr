@@ -19,7 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -31,7 +30,7 @@ jobs:
         run: yarn workspace nostr-linkr test
 
       - name: Publish with provenance
-        run: npm publish --provenance --access public
+        run: |
+          npm config set //registry.npmjs.org/:_authToken ""
+          npm publish --provenance --access public
         working-directory: packages/sdk
-        env:
-          NODE_AUTH_TOKEN: ""
