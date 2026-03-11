@@ -213,7 +213,7 @@ const linkr = createNostrLinkrClient({
 
 | Function | Description |
 |----------|-------------|
-| `createLinkEvent(address, pubkey, timestamp?)` | Create unsigned linking event |
+| `createLinkEvent(address, pubkey, timestamp?, options?)` | Create unsigned linking event (optional `{ contractRef }` discovery tag) |
 | `serializeEvent(event)` | NIP-01 canonical JSON |
 | `hashEvent(event)` | SHA-256 event hash (64-char hex) |
 | `hashAndPrepare(event)` | Hash + attach id |
@@ -237,9 +237,9 @@ const linkr = createNostrLinkrClient({
 
 ## How It Works
 
-1. A Nostr browser extension signs a **kind:27235** event containing the Ethereum address (no `0x` prefix)
-2. The signed event is submitted to the **NostrLinkr** smart contract with all NIP-01 parameters
-3. The contract computes the **SHA-256 event hash** matching NIP-01 canonical serialization
+1. A Nostr browser extension signs a **kind:13372** replaceable event whose `content` is the signer's Ethereum address (`0x`-prefixed lowercase hex)
+2. The Ethereum wallet submits the signed event to the **NostrLinkr** smart contract
+3. The contract derives `content` from `msg.sender` and computes the **NIP-01 SHA-256 event hash** internally
 4. **BIP-340 Schnorr signature** is verified on-chain using the MODEXP precompile
 5. A **bidirectional mapping** (address <-> pubkey) is stored on-chain
 
@@ -247,7 +247,7 @@ const linkr = createNostrLinkrClient({
 
 - **NIP-01**: Event serialization and hashing follows the canonical format exactly
 - **NIP-07**: The `NostrSigner` interface is compatible with browser extensions (Alby, nos2x)
-- **Kind 27235**: Custom event kind for identity linking
+- **Kind 13372**: Replaceable event kind for on-chain EVM identity linking (see [NIP-XX](https://github.com/VincenzoImp/nostr-linkr/blob/main/NIP-XX.md))
 
 ## License
 

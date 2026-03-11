@@ -11,7 +11,7 @@ The first **on-chain identity bridge** that cryptographically links Ethereum add
 
 | Chain | Address | Explorer |
 |-------|---------|----------|
-| Base Sepolia | `0xbC379bEFBAA269AfC2a1891438A7b8737E79A476` | [BaseScan](https://sepolia.basescan.org/address/0xbC379bEFBAA269AfC2a1891438A7b8737E79A476) |
+| Base Sepolia (testnet) | `0xf311342bce77086D7C28e5Ba4544c02c5bbE3443` | [BaseScan](https://sepolia.basescan.org/address/0xf311342bce77086D7C28e5Ba4544c02c5bbE3443) |
 
 ## Packages
 
@@ -30,7 +30,7 @@ yarn install
 # Build the SDK
 yarn workspace nostr-linkr build
 
-# Run all tests (68 tests: 53 SDK + 15 contract)
+# Run all tests (61 SDK + 15 contract)
 yarn test
 ```
 
@@ -105,11 +105,13 @@ See [packages/contracts/README.md](packages/contracts/README.md) for the full de
 
 ## How It Works
 
-1. A Nostr browser extension signs a **kind:27235** event containing the Ethereum address
-2. The signed event is submitted to the **NostrLinkr** smart contract
-3. The contract verifies the **SHA-256 event hash** matches NIP-01 serialization
+1. A Nostr browser extension signs a **kind:13372** replaceable event whose `content` is the signer's Ethereum address (`0x`-prefixed lowercase hex)
+2. The Ethereum wallet submits the signed event to the **NostrLinkr** smart contract
+3. The contract derives `content` from `msg.sender` and computes the **NIP-01 SHA-256 event hash** internally
 4. **BIP-340 Schnorr signature** is verified on-chain using the MODEXP precompile
 5. A **bidirectional mapping** (address ↔ pubkey) is stored on-chain
+
+The link is cryptographically bidirectional: the Nostr key signed the Ethereum address, and the Ethereum address sent the transaction. See [NIP-XX.md](NIP-XX.md) for the full specification.
 
 ## Architecture
 

@@ -9,11 +9,12 @@ NostrLinkr creates a **bidirectional, on-chain mapping** between Ethereum addres
 ## Contract Features
 
 - **BIP-340 Schnorr Verification**: Full on-chain verification using the MODEXP precompile (0x05)
-- **NIP-01 Compliant**: Event serialization matches the Nostr protocol specification exactly
+- **NIP-01 Compliant**: Event hash computed internally from canonical serialization
 - **Bidirectional Mapping**: Look up Ethereum address by Nostr pubkey, or vice versa
 - **Fully Permissionless**: No owner, no pause — once deployed, the contract is autonomous
-- **Timestamp Bounds**: 5-minute future tolerance, 1-hour past tolerance
+- **Timestamp Bounds**: 10-minute future tolerance, 24-hour past tolerance
 - **Conflict Resolution**: Automatically cleans up old links when re-linking
+- **Generic Cryptographic Primitive**: Does not validate event kind or tags — semantic rules live in the NIP
 
 ## Deploy on Any EVM Chain
 
@@ -73,10 +74,9 @@ yarn test
 
 Runs 15 tests covering:
 - Deployment state
-- pushLinkr input validation (sig length, kind, timestamp, tags, content)
+- pushLinkr input validation (sig length, timestamp bounds)
 - pullLinkr behavior
-- verifyNostrEvent hash verification
-- getEventHash consistency
+- getEventHash consistency and public visibility
 
 ## Contract API
 
@@ -84,7 +84,7 @@ Runs 15 tests covering:
 
 | Function | Description |
 |----------|-------------|
-| `pushLinkr(id, pubkey, createdAt, kind, tags, content, sig)` | Create identity link |
+| `pushLinkr(pubkey, createdAt, kind, tags, sig)` | Create identity link (content derived from `msg.sender`) |
 | `pullLinkr()` | Remove caller's link |
 
 ### Read Functions
@@ -93,8 +93,7 @@ Runs 15 tests covering:
 |----------|-------------|
 | `addressPubkey(address)` | Get Nostr pubkey for an Ethereum address |
 | `pubkeyAddress(bytes32)` | Get Ethereum address for a Nostr pubkey |
-| `verifyNostrEvent(...)` | Verify a Nostr event on-chain |
-| `getEventHash(...)` | Compute NIP-01 event hash on-chain |
+| `getEventHash(pubkey, createdAt, kind, tags, content)` | Compute NIP-01 event hash on-chain (`public pure`) |
 
 ### Events
 
@@ -105,9 +104,9 @@ Runs 15 tests covering:
 
 ## Linking Flow
 
-1. User's Nostr extension signs a **kind:27235** event with content = Ethereum address (no `0x`)
-2. Signed event submitted to `pushLinkr()` with all NIP-01 parameters
-3. Contract computes **SHA-256 hash** of the canonical NIP-01 serialization
+1. User's Nostr extension signs a **kind:13372** event with content = `0x`-prefixed lowercase Ethereum address
+2. Ethereum wallet calls `pushLinkr(pubkey, createdAt, kind, tags, sig)`
+3. Contract derives `content` from `msg.sender` and computes the **NIP-01 SHA-256 hash** internally
 4. **BIP-340 Schnorr signature** verified on-chain using secp256k1 curve math
 5. Bidirectional mapping `address <-> pubkey` stored on-chain
 
