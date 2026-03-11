@@ -1,5 +1,11 @@
 # nostr-linkr
 
+[![npm version](https://img.shields.io/npm/v/nostr-linkr)](https://www.npmjs.com/package/nostr-linkr)
+[![npm downloads](https://img.shields.io/npm/dm/nostr-linkr)](https://www.npmjs.com/package/nostr-linkr)
+[![CI](https://github.com/VincenzoImp/nostr-linkr/actions/workflows/ci.yml/badge.svg)](https://github.com/VincenzoImp/nostr-linkr/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/VincenzoImp/nostr-linkr/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
+
 TypeScript SDK for the **NostrLinkr** smart contract — the first on-chain verification system that cryptographically links Ethereum addresses (ECDSA) with Nostr public keys (Schnorr/BIP-340).
 
 ## Features
@@ -196,8 +202,6 @@ const linkr = createNostrLinkrClient({
 | `batchGetNostrPubkeys(addresses)` | Multicall batch lookup |
 | `verifyNostrEventOnChain(event)` | On-chain BIP-340 verification |
 | `getEventHashOnChain(event)` | On-chain NIP-01 hash computation |
-| `isPaused()` | Contract pause status |
-| `getOwner()` | Contract owner address |
 | `getLinkEvents(filter?)` | Query historical log events |
 | `watchLinkEvents(callback, filter?)` | Real-time event watching |
 | `pushLink(signedEvent)` | Submit identity link (requires walletClient) |

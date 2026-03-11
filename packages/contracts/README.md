@@ -11,7 +11,7 @@ NostrLinkr creates a **bidirectional, on-chain mapping** between Ethereum addres
 - **BIP-340 Schnorr Verification**: Full on-chain verification using the MODEXP precompile (0x05)
 - **NIP-01 Compliant**: Event serialization matches the Nostr protocol specification exactly
 - **Bidirectional Mapping**: Look up Ethereum address by Nostr pubkey, or vice versa
-- **Ownable + Pausable**: Emergency controls via OpenZeppelin
+- **Fully Permissionless**: No owner, no pause — once deployed, the contract is autonomous
 - **Timestamp Bounds**: 5-minute future tolerance, 1-hour past tolerance
 - **Conflict Resolution**: Automatically cleans up old links when re-linking
 
@@ -71,9 +71,8 @@ npx hardhat verify --network baseSepolia <CONTRACT_ADDRESS>
 yarn test
 ```
 
-Runs 22 tests covering:
-- Deployment and ownership
-- Pause/unpause controls
+Runs 15 tests covering:
+- Deployment state
 - pushLinkr input validation (sig length, kind, timestamp, tags, content)
 - pullLinkr behavior
 - verifyNostrEvent hash verification
@@ -85,9 +84,8 @@ Runs 22 tests covering:
 
 | Function | Description |
 |----------|-------------|
-| `pushLinkr(id, pubkey, createdAt, kind, tags, content, sig)` | Create identity link (whenNotPaused) |
+| `pushLinkr(id, pubkey, createdAt, kind, tags, content, sig)` | Create identity link |
 | `pullLinkr()` | Remove caller's link |
-| `pause()` / `unpause()` | Emergency controls (onlyOwner) |
 
 ### Read Functions
 
@@ -97,8 +95,6 @@ Runs 22 tests covering:
 | `pubkeyAddress(bytes32)` | Get Ethereum address for a Nostr pubkey |
 | `verifyNostrEvent(...)` | Verify a Nostr event on-chain |
 | `getEventHash(...)` | Compute NIP-01 event hash on-chain |
-| `paused()` | Check if contract is paused |
-| `owner()` | Get contract owner |
 
 ### Events
 

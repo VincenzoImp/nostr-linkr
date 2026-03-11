@@ -12,7 +12,7 @@ Example Next.js app that demonstrates **every function** of the `nostr-linkr` SD
 | **/events** | `getLinkEvents`, `watchLinkEvents` |
 | **/verify** | `createLinkEvent`, `hashEvent`, `serializeEvent`, `hashAndPrepare`, `validateLinkEvent`, `getEventHashOnChain`, utility functions |
 | **/link** | `createAndSignLinkEvent`, `pushLink`, `pullLink`, `simulatePushLink` |
-| **/contract** | `isPaused`, `getOwner`, `nostrLinkrAbi`, constants, error classes |
+| **/contract** | `nostrLinkrAbi`, `DEPLOYMENTS`, constants, error classes |
 
 ## Setup
 

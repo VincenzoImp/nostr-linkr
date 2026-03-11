@@ -1,14 +1,25 @@
 # nostr-linkr
 
+[![npm version](https://img.shields.io/npm/v/nostr-linkr)](https://www.npmjs.com/package/nostr-linkr)
+[![CI](https://github.com/VincenzoImp/nostr-linkr/actions/workflows/ci.yml/badge.svg)](https://github.com/VincenzoImp/nostr-linkr/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
+
 The first **on-chain identity bridge** that cryptographically links Ethereum addresses (ECDSA) with Nostr public keys (Schnorr/BIP-340). Full BIP-340 Schnorr signature verification performed entirely on-chain.
+
+## Deployments
+
+| Chain | Address | Explorer |
+|-------|---------|----------|
+| Base Sepolia | `0xbC379bEFBAA269AfC2a1891438A7b8737E79A476` | [BaseScan](https://sepolia.basescan.org/address/0xbC379bEFBAA269AfC2a1891438A7b8737E79A476) |
 
 ## Packages
 
 | Package | Description | Path |
 |---------|-------------|------|
-| **[@nostr-linkr/contracts](packages/contracts)** | Solidity smart contract with BIP-340 verification, deploy scripts, and tests | `packages/contracts` |
-| **[nostr-linkr](packages/sdk)** | TypeScript SDK — framework-agnostic, viem-based, npm-publishable | `packages/sdk` |
-| **[@nostr-linkr/example](packages/example)** | Next.js example app demonstrating every SDK function | `packages/example` |
+| [`nostr-linkr`](https://www.npmjs.com/package/nostr-linkr) | TypeScript SDK — framework-agnostic, viem-based | `packages/sdk` |
+| `@nostr-linkr/contracts` | Solidity smart contract with BIP-340 verification | `packages/contracts` |
+| `@nostr-linkr/example` | Next.js example app demonstrating every SDK function | `packages/example` |
 
 ## Quick Start
 
@@ -19,11 +30,8 @@ yarn install
 # Build the SDK
 yarn workspace nostr-linkr build
 
-# Run contract tests (22 tests)
-yarn test:contracts
-
-# Run SDK tests (53 tests)
-yarn test:sdk
+# Run all tests (68 tests: 53 SDK + 15 contract)
+yarn test
 ```
 
 ### Local Development
@@ -79,6 +87,8 @@ const unwatch = linkr.watchLinkEvents((log) => {
 });
 ```
 
+See the full [SDK documentation](packages/sdk/README.md) for the complete API reference.
+
 ## Deploy the Contract
 
 Anyone can deploy NostrLinkr on any EVM chain:
@@ -91,7 +101,7 @@ cp .env.example .env
 yarn deploy:base-sepolia  # or any supported network
 ```
 
-See [packages/contracts/README.md](packages/contracts/README.md) for full deployment guide.
+See [packages/contracts/README.md](packages/contracts/README.md) for the full deployment guide.
 
 ## How It Works
 
@@ -99,7 +109,7 @@ See [packages/contracts/README.md](packages/contracts/README.md) for full deploy
 2. The signed event is submitted to the **NostrLinkr** smart contract
 3. The contract verifies the **SHA-256 event hash** matches NIP-01 serialization
 4. **BIP-340 Schnorr signature** is verified on-chain using the MODEXP precompile
-5. A **bidirectional mapping** (address <-> pubkey) is stored on-chain
+5. A **bidirectional mapping** (address ↔ pubkey) is stored on-chain
 
 ## Architecture
 
@@ -114,6 +124,14 @@ See [packages/contracts/README.md](packages/contracts/README.md) for full deploy
     browser ext.           npm package             BIP-340 on-chain
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## Security
+
+For vulnerability reports, see [SECURITY.md](SECURITY.md).
+
 ## License
 
-MIT
+[MIT](LICENSE)
