@@ -24,12 +24,6 @@ service. This NIP provides a trustless alternative anchored on a
 blockchain: the proof is permanent, publicly verifiable, and
 requires no intermediary.
 
-The cryptographic binding is bidirectional:
-- The Nostr private key signs an event whose content is the Ethereum
-  address, proving the Nostr key owner explicitly authorized the link
-- The Ethereum private key authorizes the on-chain transaction
-  (`msg.sender`), proving the Ethereum address owner consented
-
 ## Event Format
 
 ### Link Event
@@ -50,7 +44,7 @@ The cryptographic binding is bidirectional:
 |--------------|--------------------------------------------------------------|
 | `kind`       | `13372` — replaceable, one active link per pubkey            |
 | `content`    | Ethereum address, lowercase hex, `0x` prefix, 42 chars total |
-| `tags`       | Empty `[]`, or optional discovery tags (see below)           |
+| `tags`       | Empty `[]`, or optional discovery tag (see below)            |
 
 Example content: `"0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"`
 
@@ -84,8 +78,11 @@ relays can index and serve events by contract.
 
 ### Unlink Event
 
-To signal removal of an identity link, publish a kind `13372` event
-with empty content:
+To remove an identity link, the Ethereum address owner calls
+`pullLinkr()` on the contract. This is the authoritative removal.
+
+Optionally, to signal the removal to Nostr clients, publish a
+kind `13372` event with empty content:
 
 ```json
 {
@@ -101,6 +98,8 @@ with empty content:
 
 Since kind `13372` is replaceable, this event replaces the link event
 on relays, signaling to Nostr clients that no active link exists.
+Clients MUST verify link status by querying the contract directly —
+relay state is informational and may lag or diverge.
 
 ## Client Requirements
 
@@ -200,11 +199,6 @@ the link.
 on-chain. No external server, DNS record, or social platform
 is involved.
 
-**Authoritative source:** The on-chain contract is always
-authoritative. Relay state (kind 13372 events) is informational
-and may lag or diverge. Clients MUST query the contract for
-current link status.
-
 **Remediation:** Any incorrect link can always be overwritten by
 the rightful owner submitting a new valid event. The contract
 resolves conflicts automatically, preserving only the most recent
@@ -229,14 +223,13 @@ without redeployment.
 **`id` and `content` absent from `pushLinkr`:** Both are derivable
 internally — `id` from NIP-01 hash reconstruction, `content` from
 `msg.sender`. Removing them simplifies the interface and eliminates
-redundant parameters.
+redundant parameters that could be forged or mismatched.
 
 **No chain identifier in content:** The Ethereum address uniquely
 identifies the account. The chain context is carried by the optional
-`chain` and `contract` discovery tags, not the content. This allows
-a single signed event to establish links on multiple EVM chains
-simultaneously — any compatible contract on any chain can verify the
-same signature.
+`r` discovery tag, not the content. This allows a single signed
+event to establish links on multiple EVM chains simultaneously —
+any compatible contract on any chain can verify the same signature.
 
 **Single-character `r` tag for discoverability:** Nostr relays index
 only tags with single-character keys. Using `r` makes the contract
@@ -265,8 +258,66 @@ via cryptographic proof.
 **NIP-98:** NIP-98 uses kind `27235` for HTTP authentication.
 This NIP uses a distinct kind (`13372`) with no overlap.
 
+## Discussion
+
+### Contract Immutability
+
+A contract implementing this NIP MUST be fully trustless and
+immutable: no owner, no admin key, no proxy, no upgradability. Once
+deployed, the contract is permanent cryptographic infrastructure.
+This is a deliberate design constraint, not a limitation. An
+upgradeable contract reintroduces a trusted third party — whoever
+controls the upgrade key — which defeats the core security property
+of this NIP.
+
+Any bug or design change requires a new deployment rather than an
+upgrade. Clients and users choose which deployment(s) to trust;
+the protocol does not mandate a singleton.
+
+### Multiple Deployments and Fragmentation
+
+Anyone can deploy a contract compatible with this NIP. This raises
+an obvious question: if multiple deployments exist, which one is
+authoritative?
+
+**None is globally authoritative by protocol.** Each deployment is
+an independent, equally valid cryptographic registry. A Nostr key
+may appear linked in one registry but not in another, or linked to
+different Ethereum addresses across registries, without any
+contradiction. The on-chain state of each contract is internally
+consistent; there is no cross-contract coordination.
+
+In practice, network effects will cause one deployment to emerge as
+the canonical reference for most clients — analogous to how Bitcoin's
+chain or a dominant DNS root works: the "correct" one is the one
+most participants agree to use. Clients that integrate this NIP
+SHOULD document which deployment(s) they query and SHOULD allow
+users to configure alternatives.
+
+### Event-Level Contract Declaration and Source of Truth
+
+The optional `r` tag addresses fragmentation at the event level.
+When a signer includes `["r", "eip155:<chainId>:<contractAddress>"]`
+in the link event, the event itself declares the intended
+verification deployment. The BIP-340 signature covers this tag, so
+the declaration is cryptographically bound — the signer committed
+to a specific contract at signing time.
+
+This makes a Nostr event self-describing: a reader who encounters
+it can determine exactly which on-chain registry to query without
+out-of-band knowledge. It also allows a single Nostr key to publish
+separate link events pointing to different deployments, each
+independently verifiable.
+
+The on-chain contract remains the authoritative source of link
+status. Nostr relay state (kind 13372 events) is useful for
+discovery and for determining which contract a signer used, but it
+can lag, diverge, or be censored. Clients MUST verify current link
+status by querying the contract directly.
+
 ## Reference Implementation
 
-- [nostr-linkr](https://github.com/VincenzoImp/nostr-linkr)
-- TypeScript SDK: `nostr-linkr` (npm)
-- Deployed on Base Sepolia: `0xf311342bce77086D7C28e5Ba4544c02c5bbE3443`
+- **Repository:** [github.com/VincenzoImp/nostr-linkr](https://github.com/VincenzoImp/nostr-linkr) — Solidity contract + TypeScript SDK
+- **TypeScript SDK:** [`nostr-linkr`](https://www.npmjs.com/package/nostr-linkr) on npm
+- **Testnet deployment** (Base Sepolia): [`0xf311342bce77086D7C28e5Ba4544c02c5bbE3443`](https://sepolia.basescan.org/address/0xf311342bce77086D7C28e5Ba4544c02c5bbE3443#code)
+- **Live demo:** [nostr-linkr.vercel.app](https://nostr-linkr.vercel.app) — interactive SDK explorer
