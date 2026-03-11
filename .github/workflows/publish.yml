@@ -35,6 +35,11 @@ jobs:
 
       - name: Publish with provenance
         run: |
+          echo "npm version: $(npm --version)"
+          echo "node version: $(node --version)"
+          echo "NODE_AUTH_TOKEN set: $([ -n "$NODE_AUTH_TOKEN" ] && echo YES || echo NO)"
           unset NODE_AUTH_TOKEN
+          echo "NODE_AUTH_TOKEN after unset: $([ -n "$NODE_AUTH_TOKEN" ] && echo YES || echo NO)"
+          npm config list
           npm publish --provenance --access public
         working-directory: packages/sdk
