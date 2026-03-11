@@ -10,8 +10,12 @@ dist/
 coverage/
 .env
 .env.local
+.env.*.local
 .next/
 artifacts/
 cache/
 typechain-types/
 deployments/localhost/
+.DS_Store
+*.log
+*.tgz

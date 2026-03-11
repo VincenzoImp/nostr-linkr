@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build SDK
+        run: yarn workspace nostr-linkr build
+
+      - name: Typecheck SDK
+        run: yarn workspace nostr-linkr typecheck
+
+      - name: Test SDK
+        run: yarn workspace nostr-linkr test
+
+      - name: Test contracts
+        run: yarn workspace @nostr-linkr/contracts test
+
+      - name: Typecheck example
+        run: yarn workspace @nostr-linkr/example typecheck
