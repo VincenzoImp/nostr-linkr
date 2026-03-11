@@ -1844,7 +1844,7 @@ __metadata:
     "@types/react": ^19.0.0
     "@types/react-dom": ^19.0.0
     next: ^15.2.0
-    nostr-linkr: ^0.1.0
+    nostr-linkr: ^0.2.0
     postcss: ^8.5.0
     react: ^19.0.0
     react-dom: ^19.0.0
@@ -5929,7 +5929,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"nostr-linkr@^0.1.0, nostr-linkr@workspace:packages/sdk":
+"nostr-linkr@^0.2.0, nostr-linkr@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "nostr-linkr@workspace:packages/sdk"
   dependencies:
