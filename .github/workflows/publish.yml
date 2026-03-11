@@ -33,3 +33,5 @@ jobs:
       - name: Publish with provenance
         run: npm publish --provenance --access public
         working-directory: packages/sdk
+        env:
+          NODE_AUTH_TOKEN: ""
