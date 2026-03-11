@@ -12,7 +12,7 @@ import {
   validateLinkEvent,
 } from "nostr-linkr";
 import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { hardhat } from "viem/chains";
+import { targetChain } from "@/lib/client";
 
 export default function LinkPage() {
   const [step, setStep] = useState(0);
@@ -33,7 +33,7 @@ export default function LinkPage() {
         return;
       }
       const walletClient = createWalletClient({
-        chain: hardhat,
+        chain: targetChain,
         transport: custom(window.ethereum),
       });
       const [address] = await walletClient.requestAddresses();
@@ -84,11 +84,11 @@ export default function LinkPage() {
     try {
       if (!window.ethereum || !signedEvent) return;
 
-      const publicClient = createPublicClient({ chain: hardhat, transport: http() });
-      const walletClient = createWalletClient({ chain: hardhat, transport: custom(window.ethereum) });
+      const publicClient = createPublicClient({ chain: targetChain, transport: http() });
+      const walletClient = createWalletClient({ chain: targetChain, transport: custom(window.ethereum) });
 
       const linkr = createNostrLinkrClient({
-        chain: hardhat,
+        chain: targetChain,
         publicClient,
         walletClient,
       });
@@ -119,11 +119,11 @@ export default function LinkPage() {
     try {
       if (!window.ethereum) return;
 
-      const publicClient = createPublicClient({ chain: hardhat, transport: http() });
-      const walletClient = createWalletClient({ chain: hardhat, transport: custom(window.ethereum) });
+      const publicClient = createPublicClient({ chain: targetChain, transport: http() });
+      const walletClient = createWalletClient({ chain: targetChain, transport: custom(window.ethereum) });
 
       const linkr = createNostrLinkrClient({
-        chain: hardhat,
+        chain: targetChain,
         publicClient,
         walletClient,
       });
