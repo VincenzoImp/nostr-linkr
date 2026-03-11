@@ -1,6 +1,6 @@
 {
   "name": "nostr-linkr-monorepo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "On-chain Ethereum↔Nostr identity bridge with BIP-340 Schnorr verification",
   "workspaces": [

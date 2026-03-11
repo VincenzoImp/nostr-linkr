@@ -78,24 +78,34 @@ describe("isValidSchnorrSig", () => {
 });
 
 describe("addressToContent", () => {
-  it("lowercases and strips 0x", () => {
+  it("lowercases and adds 0x prefix", () => {
     expect(addressToContent("0xABCDEF1234567890abcdef1234567890ABCDEF12")).toBe(
-      "abcdef1234567890abcdef1234567890abcdef12",
+      "0xabcdef1234567890abcdef1234567890abcdef12",
+    );
+  });
+
+  it("adds 0x prefix if missing", () => {
+    expect(addressToContent("abcdef1234567890abcdef1234567890abcdef12")).toBe(
+      "0xabcdef1234567890abcdef1234567890abcdef12",
     );
   });
 });
 
 describe("isValidAddressContent", () => {
-  it("accepts 40 lowercase hex chars", () => {
-    expect(isValidAddressContent("f39fd6e51aad88f6f4ce6ab8827279cfffb92266")).toBe(true);
+  it("accepts 0x-prefixed 40 lowercase hex chars", () => {
+    expect(isValidAddressContent("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")).toBe(true);
   });
 
   it("rejects uppercase", () => {
-    expect(isValidAddressContent("F39FD6E51AAD88F6F4CE6AB8827279CFFFB92266")).toBe(false);
+    expect(isValidAddressContent("0xF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266")).toBe(false);
   });
 
-  it("rejects 0x prefix", () => {
-    expect(isValidAddressContent("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")).toBe(false);
+  it("rejects missing 0x prefix", () => {
+    expect(isValidAddressContent("f39fd6e51aad88f6f4ce6ab8827279cfffb92266")).toBe(false);
+  });
+
+  it("rejects wrong length", () => {
+    expect(isValidAddressContent("0xf39fd6e51aad88f6f4ce6ab8827279cfffb9226")).toBe(false);
   });
 });
 
@@ -117,24 +127,24 @@ describe("isTimestampValid", () => {
     expect(valid).toBe(true);
   });
 
-  it("valid within future tolerance", () => {
-    const { valid } = isTimestampValid(now + 200, now);
+  it("valid within future tolerance (< 600s)", () => {
+    const { valid } = isTimestampValid(now + 500, now);
     expect(valid).toBe(true);
   });
 
-  it("invalid too far in future", () => {
-    const result = isTimestampValid(now + 400, now);
+  it("invalid too far in future (> 600s)", () => {
+    const result = isTimestampValid(now + 700, now);
     expect(result.valid).toBe(false);
     expect(result.tooFarInFuture).toBe(true);
   });
 
-  it("valid within past tolerance", () => {
-    const { valid } = isTimestampValid(now - 3000, now);
+  it("valid within past tolerance (< 86400s)", () => {
+    const { valid } = isTimestampValid(now - 80000, now);
     expect(valid).toBe(true);
   });
 
-  it("invalid too far in past", () => {
-    const result = isTimestampValid(now - 4000, now);
+  it("invalid too far in past (> 86400s)", () => {
+    const result = isTimestampValid(now - 90000, now);
     expect(result.valid).toBe(false);
     expect(result.tooFarInPast).toBe(true);
   });

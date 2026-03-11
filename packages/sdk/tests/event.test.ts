@@ -10,7 +10,7 @@ import {
 
 const TEST_PUBKEY = "3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d";
 const TEST_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-const TEST_CONTENT = "f39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+const TEST_CONTENT = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
 
 describe("createLinkEvent", () => {
   it("creates an unsigned event with correct fields", () => {
@@ -23,9 +23,23 @@ describe("createLinkEvent", () => {
     expect(event.content).toBe(TEST_CONTENT);
   });
 
-  it("strips 0x prefix and lowercases address", () => {
+  it("normalizes address to 0x-prefixed lowercase", () => {
     const event = createLinkEvent("0xABCDEF1234567890abcdef1234567890ABCDEF12", TEST_PUBKEY);
-    expect(event.content).toBe("abcdef1234567890abcdef1234567890abcdef12");
+    expect(event.content).toBe("0xabcdef1234567890abcdef1234567890abcdef12");
+  });
+
+  it("adds 0x prefix if missing", () => {
+    const event = createLinkEvent("abcdef1234567890abcdef1234567890abcdef12", TEST_PUBKEY);
+    expect(event.content).toBe("0xabcdef1234567890abcdef1234567890abcdef12");
+  });
+
+  it("includes r discovery tag when contractRef provided", () => {
+    const event = createLinkEvent(TEST_ADDRESS, TEST_PUBKEY, 1700000000, {
+      contractRef: "eip155:8453:0xbc379befbaa269afc2a1891438a7b8737e79a476",
+    });
+    expect(event.tags).toEqual([
+      ["r", "eip155:8453:0xbc379befbaa269afc2a1891438a7b8737e79a476"],
+    ]);
   });
 
   it("uses current timestamp if none provided", () => {
@@ -117,7 +131,6 @@ describe("validateLinkEvent", () => {
 
   it("fails for wrong event kind", () => {
     const event = { ...makeValidSignedEvent(), kind: 1 };
-    // Recompute hash since kind changed
     const rehashed = hashAndPrepare(event);
     const { valid, errors } = validateLinkEvent({ ...rehashed, sig: "a".repeat(128) });
 
@@ -125,18 +138,54 @@ describe("validateLinkEvent", () => {
     expect(errors.some((e) => e.includes("kind"))).toBe(true);
   });
 
-  it("fails for non-empty tags", () => {
+  it("fails for unknown tags", () => {
     const event = makeValidSignedEvent();
     event.tags = [["p", "some-pubkey"]];
     const { valid, errors } = validateLinkEvent(event);
 
     expect(valid).toBe(false);
-    expect(errors.some((e) => e.includes("Tags"))).toBe(true);
+    expect(errors.some((e) => e.includes("Unknown tag"))).toBe(true);
   });
 
-  it("fails for invalid content (not 40 hex chars)", () => {
+  it("passes with valid r discovery tag", () => {
+    const event = createLinkEvent(TEST_ADDRESS, TEST_PUBKEY, undefined, {
+      contractRef: "eip155:8453:0xbc379befbaa269afc2a1891438a7b8737e79a476",
+    });
+    const prepared = hashAndPrepare(event);
+    const { valid } = validateLinkEvent({ ...prepared, sig: "a".repeat(128) });
+    expect(valid).toBe(true);
+  });
+
+  it("fails for malformed r tag (not CAIP-10)", () => {
+    const event = makeValidSignedEvent();
+    event.tags = [["r", "mainnet:0xdeadbeef"]];
+    const { valid, errors } = validateLinkEvent(event);
+
+    expect(valid).toBe(false);
+    expect(errors.some((e) => e.includes("r tag"))).toBe(true);
+  });
+
+  it("fails for unknown tag key", () => {
+    const event = makeValidSignedEvent();
+    event.tags = [["chain", "eip155:8453"]];
+    const { valid, errors } = validateLinkEvent(event);
+
+    expect(valid).toBe(false);
+    expect(errors.some((e) => e.includes("Unknown tag"))).toBe(true);
+  });
+
+  it("fails for invalid content (not 0x-prefixed 40 hex chars)", () => {
     const event = makeValidSignedEvent();
     event.content = "not-an-address";
+    const { valid, errors } = validateLinkEvent(event);
+
+    expect(valid).toBe(false);
+    expect(errors.some((e) => e.includes("Content") || e.includes("address"))).toBe(true);
+  });
+
+  it("fails for content without 0x prefix", () => {
+    const event = makeValidSignedEvent();
+    event.content = "f39fd6e51aad88f6f4ce6ab8827279cfffb92266"; // no 0x
     const { valid, errors } = validateLinkEvent(event);
 
     expect(valid).toBe(false);

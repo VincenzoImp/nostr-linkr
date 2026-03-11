@@ -17,6 +17,8 @@ export interface DeploymentInfo {
   address: Address;
   chainId: number;
   chainName: string;
+  /** True if this deployment is on a testnet. Do not use for production. */
+  testnet: boolean;
   blockExplorerUrl?: string;
   deployedAtBlock?: bigint;
 }

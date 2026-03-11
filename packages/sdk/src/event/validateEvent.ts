@@ -4,10 +4,10 @@ import { hashEvent } from "./hashEvent.js";
 
 /**
  * Validate a signed Nostr event for submission to the NostrLinkr contract.
- * Performs all client-side checks that would cause the contract to revert:
- * - Event kind is 27235
- * - Tags are empty
- * - Content matches a valid lowercase Ethereum address without 0x
+ * Performs all client-side checks per NIP-XX:
+ * - Event kind is 13372
+ * - Tags are empty or contain only a valid "r" CAIP-10 discovery entry
+ * - Content is a valid lowercase Ethereum address with 0x prefix (42 chars)
  * - Signature length (128 hex chars = 64 bytes)
  * - Timestamp is within tolerance window
  * - Event id matches the computed hash
@@ -26,19 +26,25 @@ export function validateLinkEvent(
     errors.push(`Invalid event kind: expected ${NOSTR_LINKR_EVENT_KIND}, got ${event.kind}`);
   }
 
-  // Tags must be empty
-  if (event.tags.length !== 0) {
-    errors.push("Tags must be empty for a linkr event");
+  // Tags: allow empty or a single "r" tag with CAIP-10 contract reference
+  for (const tag of event.tags) {
+    if (tag[0] !== "r") {
+      errors.push(`Unknown tag: "${tag[0]}". Only the "r" discovery tag is allowed`);
+    }
+  }
+  const rTag = event.tags.find((t) => t[0] === "r");
+  if (rTag && !/^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(rTag[1])) {
+    errors.push(`Invalid r tag format: expected "eip155:<chainId>:0x<address>", got "${rTag[1]}"`);
   }
 
-  // Content must be 40-char hex (address without 0x)
-  if (!/^[0-9a-f]{40}$/.test(event.content)) {
-    errors.push("Content must be a lowercase Ethereum address without 0x prefix (40 hex chars)");
+  // Content must be 0x-prefixed lowercase hex address (42 chars)
+  if (!/^0x[0-9a-f]{40}$/.test(event.content)) {
+    errors.push("Content must be a lowercase Ethereum address with 0x prefix (42 chars)");
   }
 
   // If signer address provided, verify it matches content
   if (signerAddress) {
-    const expected = signerAddress.toLowerCase().replace(/^0x/, "");
+    const expected = `0x${signerAddress.toLowerCase().replace(/^0x/, "")}`;
     if (event.content !== expected) {
       errors.push(`Content does not match signer address: expected ${expected}, got ${event.content}`);
     }

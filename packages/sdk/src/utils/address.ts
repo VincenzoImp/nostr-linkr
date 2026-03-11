@@ -3,17 +3,18 @@ import type { Address } from "viem";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 /**
- * Format an Ethereum address as lowercase without 0x prefix (contract content format).
+ * Format an Ethereum address as lowercase with 0x prefix (contract content format).
  */
 export function addressToContent(address: string): string {
-  return address.toLowerCase().replace(/^0x/, "");
+  const hex = address.toLowerCase().replace(/^0x/, "");
+  return `0x${hex}`;
 }
 
 /**
- * Check if a content string is a valid Ethereum address (40 hex chars, no prefix).
+ * Check if a content string is a valid Ethereum address (0x prefix + 40 lowercase hex chars).
  */
 export function isValidAddressContent(content: string): boolean {
-  return /^[0-9a-f]{40}$/.test(content);
+  return /^0x[0-9a-f]{40}$/.test(content);
 }
 
 /**

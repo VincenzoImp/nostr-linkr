@@ -7,11 +7,13 @@ export const DEPLOYMENTS: Record<number, DeploymentInfo> = {
     address: "0x5FbDB2315678afecb367f032d93F642f64180aa3" as Address,
     chainId: 31337,
     chainName: "Hardhat",
+    testnet: true,
   },
   84532: {
-    address: "0xbC379bEFBAA269AfC2a1891438A7b8737E79A476" as Address,
+    address: "0xf311342bce77086D7C28e5Ba4544c02c5bbE3443" as Address,
     chainId: 84532,
     chainName: "Base Sepolia",
+    testnet: true,
     blockExplorerUrl: "https://sepolia.basescan.org",
   },
 };

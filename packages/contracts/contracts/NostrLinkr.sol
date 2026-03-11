@@ -27,53 +27,44 @@ contract NostrLinkr {
     uint256 private constant GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 private constant GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
 
-    // Maximum future timestamp tolerance (5 minutes)
-    uint256 private constant MAX_FUTURE_TOLERANCE = 300;
-    // Maximum past timestamp tolerance (1 hour)
-    uint256 private constant MAX_PAST_TOLERANCE = 3600;
+    // Maximum future timestamp tolerance (10 minutes)
+    uint256 private constant MAX_FUTURE_TOLERANCE = 600;
+    // Maximum past timestamp tolerance (24 hours)
+    uint256 private constant MAX_PAST_TOLERANCE = 86400;
 
     /**
-     * @dev Main function to link Ethereum address to Nostr pubkey
-     * @param id The Nostr event ID (hash of the event)
+     * @dev Main function to link Ethereum address to Nostr pubkey.
+     *      Content is derived internally from msg.sender — no need to pass it.
+     *      Kind and tags are not validated here; they are protocol-level concerns
+     *      defined by the NIP and enforced client-side.
      * @param pubkey The Nostr public key to link with
      * @param createdAt Unix timestamp when the event was created
-     * @param kind The Nostr event kind (must be 27235 for linkage)
-     * @param tags JSON string of event tags (must be empty array "[]")
-     * @param content The content of the event (must be sender's address without 0x prefix)
+     * @param kind The Nostr event kind
+     * @param tags JSON string of event tags
      * @param sig The Schnorr signature of the Nostr event (64 bytes)
      */
     function pushLinkr(
-        bytes32 id,
         bytes32 pubkey,
         uint256 createdAt,
         uint256 kind,
         string memory tags,
-        string memory content,
         bytes calldata sig
     ) external {
         // Validate signature length (Schnorr signatures are 64 bytes)
         require(sig.length == 64, "Invalid signature length");
 
-        // Validate event kind - 27235 is the designated kind for Nostr linkage
-        require(kind == 27235, "Invalid kind for Nostr Linkr");
-
-        // Validate timestamp - allow 5 minutes future tolerance
+        // Validate timestamp - allow 10 minutes future tolerance
         require(createdAt <= block.timestamp + MAX_FUTURE_TOLERANCE, "CreatedAt too far in the future");
 
-        // Validate timestamp - reject events older than 1 hour
+        // Validate timestamp - reject events older than 24 hours
         require(createdAt >= block.timestamp - MAX_PAST_TOLERANCE, "CreatedAt too far in the past");
 
-        // Validate tags - must be empty for linkage events
-        require(keccak256(bytes(tags)) == keccak256(bytes("[]")), "Tags must be empty for Nostr Linkr");
+        // Derive content from caller — this is the cryptographic binding
+        string memory content = addressToString(msg.sender);
 
-        // Validate content - must match sender's address without 0x prefix
-        require(
-            keccak256(bytes(content)) == keccak256(bytes(addressToStringNoPrefix(msg.sender))),
-            "Content must be sender's address without 0x prefix"
-        );
-
-        // Verify the Nostr event signature using NIP-01 and BIP-340 standards
-        require(verifyNostrEvent(id, pubkey, createdAt, kind, tags, content, sig), "Invalid Nostr signature");
+        // Compute the NIP-01 event hash and verify the Nostr signature
+        bytes32 id = getEventHash(pubkey, createdAt, kind, tags, content);
+        require(verifySchnorrSignature(pubkey, id, sig), "Invalid Nostr signature");
 
         // Remove any existing linkage for this address to prevent conflicts
         bytes32 existingPubkey = addressPubkey[msg.sender];
@@ -395,7 +386,7 @@ contract NostrLinkr {
         uint256 kind,
         string memory tags,
         string memory content
-    ) external pure returns (bytes32) {
+    ) public pure returns (bytes32) {
         // Serialize event according to Nostr specification (no 0x prefixes)
         string memory serializedEvent = string(abi.encodePacked(
             '[0,"',
@@ -431,17 +422,19 @@ contract NostrLinkr {
     }
 
     /**
-     * @dev Convert address to hexadecimal string without 0x prefix
+     * @dev Convert address to hexadecimal string with 0x prefix (standard Ethereum format)
      * @param _addr The address to convert
-     * @return string The hexadecimal representation without 0x prefix (40 characters)
+     * @return string The hexadecimal representation with 0x prefix (42 characters)
      */
-    function addressToStringNoPrefix(address _addr) internal pure returns (string memory) {
+    function addressToString(address _addr) internal pure returns (string memory) {
         bytes32 value = bytes32(uint256(uint160(_addr)));
         bytes memory alphabet = "0123456789abcdef";
-        bytes memory str = new bytes(40);
+        bytes memory str = new bytes(42);
+        str[0] = "0";
+        str[1] = "x";
         for (uint256 i = 0; i < 20; i++) {
-            str[i * 2] = alphabet[uint256(uint8(value[i + 12] >> 4))];
-            str[1 + i * 2] = alphabet[uint256(uint8(value[i + 12] & 0x0f))];
+            str[2 + i * 2] = alphabet[uint256(uint8(value[i + 12] >> 4))];
+            str[3 + i * 2] = alphabet[uint256(uint8(value[i + 12] & 0x0f))];
         }
         return string(str);
     }

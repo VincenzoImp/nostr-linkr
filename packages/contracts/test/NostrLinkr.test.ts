@@ -13,7 +13,7 @@ describe("NostrLinkr", function () {
   const VALID_PUBKEY = "0x3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d";
   const VALID_PUBKEY_2 = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
   const ZERO_PUBKEY = "0x0000000000000000000000000000000000000000000000000000000000000000";
-  const VALID_KIND = 27235n;
+  const VALID_KIND = 13372n;
   const VALID_TAGS = "[]";
 
   // 64-byte signature with valid range values
@@ -40,74 +40,46 @@ describe("NostrLinkr", function () {
     it("should revert with invalid signature length", async () => {
       const shortSig = "0x1234";
       const now = Math.floor(Date.now() / 1000);
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
 
       await expect(
-        nostrLinkr.connect(user1).pushLinkr(fakeId, VALID_PUBKEY, now, VALID_KIND, VALID_TAGS, content, shortSig),
+        nostrLinkr.connect(user1).pushLinkr(VALID_PUBKEY, now, VALID_KIND, VALID_TAGS, shortSig),
       ).to.be.revertedWith("Invalid signature length");
     });
 
-    it("should revert with invalid event kind", async () => {
+    it("should accept any event kind", async () => {
       const now = Math.floor(Date.now() / 1000);
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
-      const wrongKind = 1n; // Should be 27235
-
+      // Any kind should pass the kind check (no kind validation in contract)
+      // Will revert on signature verification, NOT on kind
       await expect(
-        nostrLinkr.connect(user1).pushLinkr(fakeId, VALID_PUBKEY, now, wrongKind, VALID_TAGS, content, VALID_SIG),
-      ).to.be.revertedWith("Invalid kind for Nostr Linkr");
+        nostrLinkr.connect(user1).pushLinkr(VALID_PUBKEY, now, 1n, VALID_TAGS, VALID_SIG),
+      ).to.be.revertedWith("Invalid Nostr signature");
+    });
+
+    it("should accept non-empty tags", async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const nonEmptyTags = '[["p","abc"]]';
+      // Non-empty tags should pass the tags check (no tags validation in contract)
+      // Will revert on signature verification, NOT on tags
+      await expect(
+        nostrLinkr.connect(user1).pushLinkr(VALID_PUBKEY, now, VALID_KIND, nonEmptyTags, VALID_SIG),
+      ).to.be.revertedWith("Invalid Nostr signature");
     });
 
     it("should revert with timestamp too far in the future", async () => {
-      const futureTime = Math.floor(Date.now() / 1000) + 600; // 10 minutes in future (> 5 min tolerance)
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
+      const futureTime = Math.floor(Date.now() / 1000) + 700; // 700s > 600s tolerance
 
       await expect(
-        nostrLinkr
-          .connect(user1)
-          .pushLinkr(fakeId, VALID_PUBKEY, futureTime, VALID_KIND, VALID_TAGS, content, VALID_SIG),
+        nostrLinkr.connect(user1).pushLinkr(VALID_PUBKEY, futureTime, VALID_KIND, VALID_TAGS, VALID_SIG),
       ).to.be.revertedWith("CreatedAt too far in the future");
     });
 
     it("should revert with timestamp too far in the past", async () => {
-      const pastTime = Math.floor(Date.now() / 1000) - 7200; // 2 hours ago (> 1 hour tolerance)
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
+      const pastTime = Math.floor(Date.now() / 1000) - 90000; // 25 hours ago (> 24h tolerance)
 
       await expect(
-        nostrLinkr
-          .connect(user1)
-          .pushLinkr(fakeId, VALID_PUBKEY, pastTime, VALID_KIND, VALID_TAGS, content, VALID_SIG),
+        nostrLinkr.connect(user1).pushLinkr(VALID_PUBKEY, pastTime, VALID_KIND, VALID_TAGS, VALID_SIG),
       ).to.be.revertedWith("CreatedAt too far in the past");
     });
-
-    it("should revert with non-empty tags", async () => {
-      const now = Math.floor(Date.now() / 1000);
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
-      const invalidTags = '[["p","abc"]]';
-
-      await expect(
-        nostrLinkr
-          .connect(user1)
-          .pushLinkr(fakeId, VALID_PUBKEY, now, VALID_KIND, invalidTags, content, VALID_SIG),
-      ).to.be.revertedWith("Tags must be empty for Nostr Linkr");
-    });
-
-    it("should revert when content doesn't match sender address", async () => {
-      const now = Math.floor(Date.now() / 1000);
-      const wrongContent = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"; // Not sender's address
-      const fakeId = ethers.keccak256("0x00");
-
-      await expect(
-        nostrLinkr
-          .connect(user1)
-          .pushLinkr(fakeId, VALID_PUBKEY, now, VALID_KIND, VALID_TAGS, wrongContent, VALID_SIG),
-      ).to.be.revertedWith("Content must be sender's address without 0x prefix");
-    });
-
   });
 
   describe("pullLinkr", () => {
@@ -122,16 +94,16 @@ describe("NostrLinkr", function () {
       const shortSig = "0x1234";
 
       await expect(
-        nostrLinkr.verifyNostrEvent(fakeId, VALID_PUBKEY, 1000, 27235, "[]", "test", shortSig),
+        nostrLinkr.verifyNostrEvent(fakeId, VALID_PUBKEY, 1000, 13372, "[]", "test", shortSig),
       ).to.be.revertedWith("Signature must be 64 bytes");
     });
 
     it("should revert when event ID doesn't match computed hash", async () => {
-      const wrongId = ethers.keccak256("0x00"); // Will not match the computed hash
+      const wrongId = ethers.keccak256("0x00");
       const now = 1700000000;
 
       await expect(
-        nostrLinkr.verifyNostrEvent(wrongId, VALID_PUBKEY, now, 27235, "[]", "test", VALID_SIG),
+        nostrLinkr.verifyNostrEvent(wrongId, VALID_PUBKEY, now, 13372, "[]", "test", VALID_SIG),
       ).to.be.revertedWith("Event ID mismatch");
     });
   });
@@ -140,22 +112,17 @@ describe("NostrLinkr", function () {
     it("should produce consistent hashes with verifyNostrEvent serialization", async () => {
       const pubkey = VALID_PUBKEY;
       const createdAt = 1700000000;
-      const kind = 27235;
+      const kind = 13372;
       const tags = "[]";
-      const content = "test_content_address";
+      const content = "0xtest_content_address_placeholder00000";
 
-      // getEventHash should produce the same hash as the internal serialization in verifyNostrEvent
       const hash = await nostrLinkr.getEventHash(pubkey, createdAt, kind, tags, content);
 
-      // The hash should be non-zero (valid computation)
       expect(hash).to.not.equal(ZERO_PUBKEY);
 
-      // If we call verifyNostrEvent with this hash as eventId, it should NOT revert
-      // with "Event ID mismatch" (it may revert on signature verification instead)
       try {
         await nostrLinkr.verifyNostrEvent(hash, pubkey, createdAt, kind, tags, content, VALID_SIG);
       } catch (error: any) {
-        // Should fail on Schnorr verification, NOT on "Event ID mismatch"
         expect(error.message).to.not.include("Event ID mismatch");
       }
     });
@@ -163,25 +130,31 @@ describe("NostrLinkr", function () {
 
   describe("Utility functions via getEventHash", () => {
     it("should compute non-zero hash for valid inputs", async () => {
-      const hash = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 27235, "[]", "test");
+      const hash = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "test");
       expect(hash).to.not.equal(ZERO_PUBKEY);
     });
 
     it("should produce different hashes for different inputs", async () => {
-      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 27235, "[]", "content1");
-      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 27235, "[]", "content2");
+      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "content1");
+      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "content2");
       expect(hash1).to.not.equal(hash2);
     });
 
     it("should produce different hashes for different timestamps", async () => {
-      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 27235, "[]", "test");
-      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000001, 27235, "[]", "test");
+      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "test");
+      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000001, 13372, "[]", "test");
       expect(hash1).to.not.equal(hash2);
     });
 
     it("should produce different hashes for different pubkeys", async () => {
-      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 27235, "[]", "test");
-      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY_2, 1700000000, 27235, "[]", "test");
+      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "test");
+      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY_2, 1700000000, 13372, "[]", "test");
+      expect(hash1).to.not.equal(hash2);
+    });
+
+    it("should produce different hashes for different kinds", async () => {
+      const hash1 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 13372, "[]", "test");
+      const hash2 = await nostrLinkr.getEventHash(VALID_PUBKEY, 1700000000, 1, "[]", "test");
       expect(hash1).to.not.equal(hash2);
     });
   });

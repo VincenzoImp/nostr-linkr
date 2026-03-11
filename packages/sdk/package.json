@@ -1,6 +1,6 @@
 {
   "name": "nostr-linkr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript SDK for the NostrLinkr smart contract — on-chain Ethereum↔Nostr identity bridge with BIP-340 Schnorr verification",
   "license": "MIT",
   "author": "Vincenzo Imp",

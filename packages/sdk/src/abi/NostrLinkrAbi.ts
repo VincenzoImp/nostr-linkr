@@ -125,11 +125,6 @@ export const nostrLinkrAbi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "id",
-        type: "bytes32",
-      },
-      {
-        internalType: "bytes32",
         name: "pubkey",
         type: "bytes32",
       },
@@ -146,11 +141,6 @@ export const nostrLinkrAbi = [
       {
         internalType: "string",
         name: "tags",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "content",
         type: "string",
       },
       {

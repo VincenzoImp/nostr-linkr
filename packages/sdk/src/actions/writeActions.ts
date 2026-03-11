@@ -24,12 +24,10 @@ export function createWriteActions(
       abi: nostrLinkrAbi,
       functionName: "pushLinkr",
       args: [
-        pubkeyToBytes32(signedEvent.id) as Hash,
         pubkeyToBytes32(signedEvent.pubkey) as Hash,
         BigInt(signedEvent.created_at),
         BigInt(signedEvent.kind),
         JSON.stringify(signedEvent.tags),
-        signedEvent.content,
         sigToHex(signedEvent.sig),
       ],
     });
@@ -55,20 +53,20 @@ export function createWriteActions(
     const wc = requireWallet();
     const [account] = await wc.getAddresses();
 
+    const args = [
+      pubkeyToBytes32(signedEvent.pubkey) as Hash,
+      BigInt(signedEvent.created_at),
+      BigInt(signedEvent.kind),
+      JSON.stringify(signedEvent.tags),
+      sigToHex(signedEvent.sig),
+    ] as const;
+
     const { request } = await publicClient.simulateContract({
       account,
       address: contractAddress,
       abi: nostrLinkrAbi,
       functionName: "pushLinkr",
-      args: [
-        pubkeyToBytes32(signedEvent.id) as Hash,
-        pubkeyToBytes32(signedEvent.pubkey) as Hash,
-        BigInt(signedEvent.created_at),
-        BigInt(signedEvent.kind),
-        JSON.stringify(signedEvent.tags),
-        signedEvent.content,
-        sigToHex(signedEvent.sig),
-      ],
+      args,
     });
 
     const gasEstimate = await publicClient.estimateContractGas({
@@ -76,15 +74,7 @@ export function createWriteActions(
       address: contractAddress,
       abi: nostrLinkrAbi,
       functionName: "pushLinkr",
-      args: [
-        pubkeyToBytes32(signedEvent.id) as Hash,
-        pubkeyToBytes32(signedEvent.pubkey) as Hash,
-        BigInt(signedEvent.created_at),
-        BigInt(signedEvent.kind),
-        JSON.stringify(signedEvent.tags),
-        signedEvent.content,
-        sigToHex(signedEvent.sig),
-      ],
+      args,
     });
 
     return { request, gasEstimate };
