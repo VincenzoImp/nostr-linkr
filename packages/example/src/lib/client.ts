@@ -1,12 +1,12 @@
 import { createPublicClient, http, type Chain } from "viem";
-import { hardhat } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { createNostrLinkrClient } from "nostr-linkr";
 
 /**
  * Default chain for the example app.
  * Change this to target a different network.
  */
-export const targetChain: Chain = hardhat;
+export const targetChain: Chain = baseSepolia;
 
 /**
  * Public client for read operations.
