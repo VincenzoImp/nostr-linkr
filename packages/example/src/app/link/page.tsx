@@ -37,6 +37,7 @@ export default function LinkPage() {
         transport: custom(window.ethereum),
       });
       const [address] = await walletClient.requestAddresses();
+      await walletClient.switchChain({ id: targetChain.id });
       setWalletAddress(address);
       setStep(1);
     } catch (e) {
@@ -87,6 +88,9 @@ export default function LinkPage() {
       const publicClient = createPublicClient({ chain: targetChain, transport: http() });
       const walletClient = createWalletClient({ chain: targetChain, transport: custom(window.ethereum) });
 
+      // Ensure wallet is on the correct chain
+      await walletClient.switchChain({ id: targetChain.id });
+
       const linkr = createNostrLinkrClient({
         chain: targetChain,
         publicClient,
@@ -121,6 +125,9 @@ export default function LinkPage() {
 
       const publicClient = createPublicClient({ chain: targetChain, transport: http() });
       const walletClient = createWalletClient({ chain: targetChain, transport: custom(window.ethereum) });
+
+      // Ensure wallet is on the correct chain
+      await walletClient.switchChain({ id: targetChain.id });
 
       const linkr = createNostrLinkrClient({
         chain: targetChain,
