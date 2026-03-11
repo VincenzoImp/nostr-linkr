@@ -31,6 +31,6 @@ jobs:
 
       - name: Publish with provenance
         run: |
-          npm config set //registry.npmjs.org/:_authToken ""
+          unset NODE_AUTH_TOKEN
           npm publish --provenance --access public
         working-directory: packages/sdk
