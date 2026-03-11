@@ -144,24 +144,6 @@ export function createReadActions(
     return result as Hash;
   }
 
-  async function isPaused(): Promise<boolean> {
-    const result = await publicClient.readContract({
-      address: contractAddress,
-      abi: nostrLinkrAbi,
-      functionName: "paused",
-    });
-    return result as boolean;
-  }
-
-  async function getOwner(): Promise<Address> {
-    const result = await publicClient.readContract({
-      address: contractAddress,
-      abi: nostrLinkrAbi,
-      functionName: "owner",
-    });
-    return result as Address;
-  }
-
   async function getLinkEvents(filter?: LinkrEventFilter): Promise<LinkrEventLog[]> {
     const [pushedLogs, pulledLogs] = await Promise.all([
       publicClient.getLogs({
@@ -302,8 +284,6 @@ export function createReadActions(
     batchGetNostrPubkeys,
     verifyNostrEventOnChain,
     getEventHashOnChain,
-    isPaused,
-    getOwner,
     getLinkEvents,
     watchLinkEvents,
   };

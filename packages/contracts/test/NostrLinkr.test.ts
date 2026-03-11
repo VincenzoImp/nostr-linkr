@@ -5,7 +5,7 @@ import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("NostrLinkr", function () {
   let nostrLinkr: NostrLinkr;
-  let owner: SignerWithAddress;
+  let deployer: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
 
@@ -23,52 +23,16 @@ describe("NostrLinkr", function () {
     "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b";
 
   beforeEach(async () => {
-    [owner, user1, user2] = await ethers.getSigners();
+    [deployer, user1, user2] = await ethers.getSigners();
     const NostrLinkrFactory = await ethers.getContractFactory("NostrLinkr");
     nostrLinkr = (await NostrLinkrFactory.deploy()) as NostrLinkr;
     await nostrLinkr.waitForDeployment();
   });
 
   describe("Deployment", () => {
-    it("should set the deployer as owner", async () => {
-      expect(await nostrLinkr.owner()).to.equal(owner.address);
-    });
-
-    it("should start unpaused", async () => {
-      expect(await nostrLinkr.paused()).to.equal(false);
-    });
-
     it("should have empty mappings initially", async () => {
       expect(await nostrLinkr.addressPubkey(user1.address)).to.equal(ZERO_PUBKEY);
       expect(await nostrLinkr.pubkeyAddress(VALID_PUBKEY)).to.equal(ethers.ZeroAddress);
-    });
-  });
-
-  describe("Pause/Unpause", () => {
-    it("should allow owner to pause", async () => {
-      await nostrLinkr.connect(owner).pause();
-      expect(await nostrLinkr.paused()).to.equal(true);
-    });
-
-    it("should allow owner to unpause", async () => {
-      await nostrLinkr.connect(owner).pause();
-      await nostrLinkr.connect(owner).unpause();
-      expect(await nostrLinkr.paused()).to.equal(false);
-    });
-
-    it("should revert when non-owner tries to pause", async () => {
-      await expect(nostrLinkr.connect(user1).pause()).to.be.revertedWithCustomError(
-        nostrLinkr,
-        "OwnableUnauthorizedAccount",
-      );
-    });
-
-    it("should revert when non-owner tries to unpause", async () => {
-      await nostrLinkr.connect(owner).pause();
-      await expect(nostrLinkr.connect(user1).unpause()).to.be.revertedWithCustomError(
-        nostrLinkr,
-        "OwnableUnauthorizedAccount",
-      );
     });
   });
 
@@ -144,17 +108,6 @@ describe("NostrLinkr", function () {
       ).to.be.revertedWith("Content must be sender's address without 0x prefix");
     });
 
-    it("should revert when paused", async () => {
-      await nostrLinkr.connect(owner).pause();
-
-      const now = Math.floor(Date.now() / 1000);
-      const content = user1.address.toLowerCase().slice(2);
-      const fakeId = ethers.keccak256("0x00");
-
-      await expect(
-        nostrLinkr.connect(user1).pushLinkr(fakeId, VALID_PUBKEY, now, VALID_KIND, VALID_TAGS, content, VALID_SIG),
-      ).to.be.revertedWithCustomError(nostrLinkr, "EnforcedPause");
-    });
   });
 
   describe("pullLinkr", () => {

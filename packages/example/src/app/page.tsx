@@ -45,8 +45,8 @@ const sections = [
   {
     href: "/contract",
     title: "Contract Info",
-    description: "Contract status, owner, ABI export, utility functions, and constants.",
-    sdk: "isPaused, getOwner, nostrLinkrAbi, pubkeyToBytes32, isValidPubkey, addressToContent",
+    description: "ABI export, deployments, utility functions, constants, and error handling.",
+    sdk: "nostrLinkrAbi, pubkeyToBytes32, isValidPubkey, addressToContent, DEPLOYMENTS",
   },
 ];
 

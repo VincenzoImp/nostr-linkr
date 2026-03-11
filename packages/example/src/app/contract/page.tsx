@@ -17,27 +17,7 @@ import {
 } from "nostr-linkr";
 
 export default function ContractPage() {
-  const [paused, setPaused] = useState<string | null>(null);
-  const [owner, setOwner] = useState<string | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchContractInfo = async () => {
-    setLoading("info");
-    setError(null);
-    try {
-      const [isPaused, contractOwner] = await Promise.all([
-        linkrClient.isPaused(),
-        linkrClient.getOwner(),
-      ]);
-      setPaused(String(isPaused));
-      setOwner(contractOwner);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to query contract");
-    } finally {
-      setLoading(null);
-    }
-  };
 
   // Test error classes
   const testErrors = () => {
@@ -59,8 +39,7 @@ export default function ContractPage() {
       }
     }
 
-    setError(null);
-    setOwner(errors.join("\n"));
+    setError(errors.join("\n"));
   };
 
   const chainIds = getSupportedChainIds();
@@ -79,23 +58,16 @@ export default function ContractPage() {
       <div>
         <h1 className="text-2xl font-bold mb-2">Contract Info</h1>
         <p className="text-zinc-400">
-          Contract status, ABI, deployments, constants, and error handling.
+          ABI, deployments, constants, and error handling.
         </p>
       </div>
 
-      {/* Contract Status */}
+      {/* Contract Info */}
       <div className="card space-y-4">
-        <h2 className="text-lg font-semibold">Contract Status</h2>
-        <button className="btn btn-primary" onClick={fetchContractInfo} disabled={loading === "info"}>
-          {loading === "info" ? "Querying..." : "Fetch Contract Info"}
-        </button>
+        <h2 className="text-lg font-semibold">Contract Info</h2>
         <ResultDisplay label="Contract Address" value={linkrClient.contractAddress} mono />
         <ResultDisplay label="Chain" value={`${linkrClient.chain.name} (id: ${linkrClient.chain.id})`} />
-        {paused !== null && <ResultDisplay label="isPaused()" value={paused} />}
-        {owner !== null && <ResultDisplay label="getOwner()" value={owner} mono />}
-        <CodeBlock code={`const paused = await linkr.isPaused();
-const owner = await linkr.getOwner();
-console.log(linkr.contractAddress, linkr.chain.name);`} />
+        <CodeBlock code={`console.log(linkr.contractAddress, linkr.chain.name);`} />
       </div>
 
       {/* ABI */}
@@ -170,9 +142,6 @@ try {
   }
   if (e instanceof NostrLinkrError) {
     switch (e.code) {
-      case NostrLinkrErrorCode.CONTRACT_PAUSED:
-        // Handle: contract is paused
-        break;
       case NostrLinkrErrorCode.INVALID_PUBKEY:
         // Handle: invalid pubkey format
         break;

@@ -26,8 +26,6 @@ export interface NostrLinkrClient {
   batchGetNostrPubkeys(addresses: Address[]): Promise<BatchLookupResult>;
   verifyNostrEventOnChain(event: NostrEvent): Promise<boolean>;
   getEventHashOnChain(event: UnsignedNostrEvent): Promise<Hash>;
-  isPaused(): Promise<boolean>;
-  getOwner(): Promise<Address>;
   getLinkEvents(filter?: LinkrEventFilter): Promise<LinkrEventLog[]>;
   watchLinkEvents(
     callback: (log: LinkrEventLog) => void,

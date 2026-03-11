@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-
 /**
  * @title NostrLinkr
- * @dev Smart contract to link Ethereum addresses with Nostr public keys
- * @notice This contract allows users to create verifiable links between their Ethereum address and Nostr identity
+ * @dev Permissionless smart contract to link Ethereum addresses with Nostr public keys.
+ *      Full BIP-340 Schnorr signature verification performed entirely on-chain.
+ * @notice This contract has no owner and cannot be paused. Once deployed, it is fully autonomous.
  */
-contract NostrLinkr is Ownable, Pausable {
+contract NostrLinkr {
 
     // Mapping from Ethereum address to Nostr public key
     mapping(address => bytes32) public addressPubkey;
@@ -34,22 +32,6 @@ contract NostrLinkr is Ownable, Pausable {
     // Maximum past timestamp tolerance (1 hour)
     uint256 private constant MAX_PAST_TOLERANCE = 3600;
 
-    constructor() Ownable(msg.sender) {}
-
-    /**
-     * @dev Pause the contract - only owner
-     */
-    function pause() external onlyOwner {
-        _pause();
-    }
-
-    /**
-     * @dev Unpause the contract - only owner
-     */
-    function unpause() external onlyOwner {
-        _unpause();
-    }
-
     /**
      * @dev Main function to link Ethereum address to Nostr pubkey
      * @param id The Nostr event ID (hash of the event)
@@ -68,7 +50,7 @@ contract NostrLinkr is Ownable, Pausable {
         string memory tags,
         string memory content,
         bytes calldata sig
-    ) external whenNotPaused {
+    ) external {
         // Validate signature length (Schnorr signatures are 64 bytes)
         require(sig.length == 64, "Invalid signature length");
 

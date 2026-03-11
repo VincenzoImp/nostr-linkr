@@ -75,8 +75,6 @@ describe("createNostrLinkrClient", () => {
     expect(typeof client.batchGetNostrPubkeys).toBe("function");
     expect(typeof client.verifyNostrEventOnChain).toBe("function");
     expect(typeof client.getEventHashOnChain).toBe("function");
-    expect(typeof client.isPaused).toBe("function");
-    expect(typeof client.getOwner).toBe("function");
     expect(typeof client.getLinkEvents).toBe("function");
     expect(typeof client.watchLinkEvents).toBe("function");
   });
