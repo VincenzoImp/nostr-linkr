@@ -9,7 +9,7 @@ export const DEPLOYMENTS: Record<number, DeploymentInfo> = {
     chainName: "Hardhat",
   },
   84532: {
-    address: "0x0000000000000000000000000000000000000000" as Address, // TODO: update after deployment
+    address: "0xB2E3da5028AEBe3896470C7EE91a75a8f2ca0806" as Address,
     chainId: 84532,
     chainName: "Base Sepolia",
     blockExplorerUrl: "https://sepolia.basescan.org",
